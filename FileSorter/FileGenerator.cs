@@ -28,7 +28,7 @@ namespace FileSorter
                         _logger.ReportProgress(i, linesNumber);
                 }
 
-            Console.WriteLine("File generated.");
+            Console.WriteLine("File generated");
         }
 
         public static int RandomNumber() => Random.Next();

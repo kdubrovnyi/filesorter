@@ -107,72 +107,62 @@ namespace FileSorter
         {
             _logger.Log("Merging");
 
-            var chunksNumber = sortedChunkFiles.Count; // Number of chunks
-            var bufferSize = maxMemory / chunksNumber; // size in bytes of each buffer
+            var chunksNumber = sortedChunkFiles.Count;
+            var bufferSize = maxMemory / chunksNumber;
             var recordOverhead = 7.5; // The overhead of using Queue<>
             var bufferLen = (int)(bufferSize / estimatedRecordSize / recordOverhead); // number of records in each buffer
 
-            // Open the files
             var readers = new StreamReader[chunksNumber];
             for (var i = 0; i < chunksNumber; i++)
                 readers[i] = new StreamReader(sortedChunkFiles[i]);
 
-            // Make the queues
-            Queue<string>[] queues = new Queue<string>[chunksNumber];
-            for (int i = 0; i < chunksNumber; i++)
+            var queues = new Queue<string>[chunksNumber];
+            for (var i = 0; i < chunksNumber; i++)
                 queues[i] = new Queue<string>(bufferLen);
 
-            // Load the queues
-            _logger.Log("Priming the queues");
-            for (int i = 0; i < chunksNumber; i++)
+            _logger.Log("Loading queues");
+            for (var i = 0; i < chunksNumber; i++)
                 LoadQueue(queues[i], readers[i], bufferLen);
-            _logger.Log("Priming the queues complete");
+            _logger.Log("Loading queues complete");
 
-            // Merge!
             var sw = new StreamWriter(targetFile);
-            int j, progress = 0;
+            var progress = 0;
             while (true)
             {
-                // Report the progress
                 if (++progress % 5000 == 0)
                     _logger.ReportProgress(progress, estimatedRecordsNumber);
 
                 // Find the chunk with the lowest value
-                var lowestIndex = -1;
+                var lowestChunkIndex = -1;
                 var lowestValue = "";
-                for (j = 0; j < chunksNumber; j++)
+                int i;
+                for (i = 0; i < chunksNumber; i++)
                 {
-                    if (queues[j] != null)
+                    if (queues[i] != null)
                     {
-                        if (lowestIndex < 0 || Compare(queues[j].Peek(), lowestValue) < 0)
+                        if (lowestChunkIndex < 0 || Compare(queues[i].Peek(), lowestValue) < 0)
                         {
-                            lowestIndex = j;
-                            lowestValue = queues[j].Peek();
+                            lowestChunkIndex = i;
+                            lowestValue = queues[i].Peek();
                         }
                     }
                 }
 
-                // Was nothing found in any queue? We must be done then.
-                if (lowestIndex == -1) {
-                    break; }
+                if (lowestChunkIndex == -1)
+                    break;
 
-                // Output it
                 sw.WriteLine(lowestValue);
 
-                // Remove from queue
-                queues[lowestIndex].Dequeue();
-                // Have we emptied the queue? Top it up
-                if (queues[lowestIndex].Count == 0)
+                queues[lowestChunkIndex].Dequeue();
+                if (queues[lowestChunkIndex].Count == 0)
                 {
-                    LoadQueue(queues[lowestIndex], readers[lowestIndex], bufferLen);
-                    // Was there nothing left to read?
-                    if (queues[lowestIndex].Count == 0)
-                        queues[lowestIndex] = null;
+                    LoadQueue(queues[lowestChunkIndex], readers[lowestChunkIndex], bufferLen);
+                    if (queues[lowestChunkIndex].Count == 0)
+                        queues[lowestChunkIndex] = null;
                 }
             }
             sw.Close();
 
-            // Close and delete the files
             for (var i = 0; i < chunksNumber; i++)
             {
                 readers[i].Close();
