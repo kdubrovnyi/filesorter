@@ -15,34 +15,37 @@ namespace FileSorter
             if (sX == null || sY == null)
                 throw new InvalidOperationException($"{nameof(NumberStringComparer)} must be used only for comparing string objects.");
 
-            int xPart1;
-            string xPart2;
-            Split(sX, out xPart1, out xPart2);
-            int yPart1;
-            string yPart2;
-            Split(sY, out yPart1, out yPart2);
+            var xPart2 = SecondPart(sX);
+            var yPart2 = SecondPart(sY);
 
             var part2Comparison = string.CompareOrdinal(xPart2, yPart2);
 
             if (part2Comparison != 0)
                 return part2Comparison;
 
-            return xPart1 - yPart1;
+            var intXPart1 = FirstPart(sX);
+            var intYPart1 = FirstPart(sY);
+
+            return intXPart1 - intYPart1;
         }
 
-        private static void Split(string value, out int part1, out string part2)
+        private static string SecondPart(string value)
         {
-            var parts = value.Split(new[] {Separator}, StringSplitOptions.None);
-            if (parts.Length != 2)
-                throw new InvalidOperationException($"The compared string must contain 2 parts delimited by {Separator}");
+            var secondPart = value.Substring(value.IndexOf(Separator, StringComparison.Ordinal) + Separator.Length);
 
-            if (!int.TryParse(parts[0], out part1))
-                throw new InvalidOperationException("The first part of the string must be an integer number");
-
-            if (string.IsNullOrWhiteSpace(parts[1]))
+            if (string.IsNullOrWhiteSpace(secondPart))
                 throw new InvalidOperationException("The second part of the string must not be empty or white space");
 
-            part2 = parts[1];
+            return secondPart;
+        }
+
+        private static int FirstPart(string value)
+        {
+            var firstPart = value.Substring(0, value.IndexOf(Separator, StringComparison.Ordinal));
+            if (!int.TryParse(firstPart, out int firstPartInt))
+                throw new InvalidOperationException("The first part of the string must be an integer number");
+
+            return firstPartInt;
         }
     }
 }
