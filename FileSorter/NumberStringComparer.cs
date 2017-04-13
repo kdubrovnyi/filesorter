@@ -14,7 +14,7 @@ namespace FileSorter
 
             if (sX == null || sY == null)
                 throw new InvalidOperationException($"{nameof(NumberStringComparer)} must be used only for comparing string objects.");
-
+            
             var xPart2 = SecondPart(sX);
             var yPart2 = SecondPart(sY);
 
@@ -31,10 +31,14 @@ namespace FileSorter
 
         private static string SecondPart(string value)
         {
-            var secondPart = value.Substring(value.IndexOf(Separator, StringComparison.Ordinal) + Separator.Length);
+            var separatorIndex = value.IndexOf(Separator, StringComparison.Ordinal);
+            if (separatorIndex < 0)
+                throw new InvalidOperationException($"String must contain '{Separator}' separator.");
+
+            var secondPart = value.Substring( + Separator.Length);
 
             if (string.IsNullOrWhiteSpace(secondPart))
-                throw new InvalidOperationException("The second part of the string must not be empty or white space");
+                throw new InvalidOperationException("The second part of the string must not be empty or white space.");
 
             return secondPart;
         }
@@ -43,7 +47,7 @@ namespace FileSorter
         {
             var firstPart = value.Substring(0, value.IndexOf(Separator, StringComparison.Ordinal));
             if (!int.TryParse(firstPart, out int firstPartInt))
-                throw new InvalidOperationException("The first part of the string must be an integer number");
+                throw new InvalidOperationException("The first part of the string must be an integer number.");
 
             return firstPartInt;
         }
