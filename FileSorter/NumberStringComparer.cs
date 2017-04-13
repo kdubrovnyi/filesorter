@@ -35,7 +35,7 @@ namespace FileSorter
             if (separatorIndex < 0)
                 throw new InvalidOperationException($"String must contain '{Separator}' separator.");
 
-            var secondPart = value.Substring( + Separator.Length);
+            var secondPart = value.Substring(separatorIndex + Separator.Length);
 
             if (string.IsNullOrWhiteSpace(secondPart))
                 throw new InvalidOperationException("The second part of the string must not be empty or white space.");

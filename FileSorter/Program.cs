@@ -20,7 +20,7 @@ namespace FileSorter
                 if (args.Length < 2)
                     Console.WriteLine("Source and target file paths must be provided");
                 else
-                    new Sorter(new ConsoleLogger()).Sort(args[0], args[1]);
+                    new Sorter(new ConsoleLogger(), new NumberStringComparer()).Sort(args[0], args[1]);
             }
         }
     }
